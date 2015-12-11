@@ -1,0 +1,39 @@
+---
+- hosts: upgrade
+
+  tasks:
+  - name: yum upgrade
+    yum: name=* state=latest
+    register: data_yum
+    when: ansible_pkg_mgr == 'yum'
+
+  - name: apt upgrade
+    apt: upgrade=yes update_cache=yes
+    register: data_apt
+    when: ansible_pkg_mgr == 'apt'
+
+  - name: yum reboot-check
+    shell: 'if [ "$(rpm -q kernel --queryformat ''%{installtime} %{version}-%{release}.%{arch}\n'' | sort -n -k1 | tail -1 | cut -d '' '' -f 2)" = "$(uname -r)" ]; then echo "no"; else echo "yes"; fi'
+    register: reboot_yum
+    when: ansible_pkg_mgr == 'yum'
+
+  - name: apt reboot-check
+    shell: 'if [ -e "/var/run/reboot-required" ]; then echo "yes"; else echo "no"; fi'
+    register: reboot_apt
+    when: ansible_pkg_mgr == 'apt'
+
+  - name: yum summary
+    mail: to='{{ admin_mail }}' subject='[YUM] Upgrade done {{ ansible_fqdn }}' body='{{ data_yum.results | join(" ") | replace("\'","\'\'") }}'
+    when: mail_info == 'yes' and ansible_pkg_mgr == 'yum' and data_yum.changed
+
+  - name: apt summary
+    mail: to='{{ admin_mail }}' subject='[APT] Upgrade done {{ ansible_fqdn }}' body='{{ data_apt.stdout | quote }}'
+    when: mail_info == 'yes' and ansible_pkg_mgr == 'apt' and data_apt.changed
+
+  - name: reboot mail
+    mail: to='{{ admin_mail }}' subject='Reboot required for {{ ansible_fqdn }}!'
+    when: auto_reboot == 'no' and ( ansible_pkg_mgr == 'yum' and reboot_yum.stdout == 'yes' or ansible_pkg_mgr == 'apt' and reboot_apt.stdout == 'yes' )
+
+  - name: auto-reboot
+    command: shutdown -r now 'Rebooting to complete system upgrade'
+    when: auto_reboot == 'yes' and ( ansible_pkg_mgr == 'yum' and reboot_yum.stdout == 'yes' or ansible_pkg_mgr == 'apt' and reboot_apt.stdout == 'yes' )

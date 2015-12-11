@@ -1,0 +1,5 @@
+[upgrade]
+node1.example.com auto_reboot=no  mail_info=no  admin_mail=admin1@example.com ansible_ssh_user=root
+node2.example.com auto_reboot=yes mail_info=no  admin_mail=admin1@example.com ansible_ssh_user=root
+node3.example.com auto_reboot=no  mail_info=yes admin_mail=admin2@example.com ansible_ssh_user=root
+node4.example.com auto_reboot=yes mail_info=yes admin_mail=admin2@example.com ansible_ssh_user=root
