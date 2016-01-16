@@ -3,9 +3,9 @@
 
   tasks:
   - name: yum check
-    shell: 'updates=$(yum check-update) ; [ "$?" != "0" ] && echo "$updates" | mail -s "[YUM] Upgrade needed $HOSTNAME" "{{ admin_mail | quote }}" || exit 0'
+    shell: 'updates=$(yum check-update) ; [ "$?" != "0" ] && echo "$updates" | mail -s "[ANSIBLE] Upgrade required on {{ ansible_fqdn }}" "{{ admin_mail }}" || exit 0'
     when: mail_info == 'yes' and ansible_pkg_mgr == 'yum'
 
   - name: apt check
-    shell: '[ ! -z "$(apt-get update 2>&1 | grep Get)" ] && [ ! -z "$(apt-get --simulate dist-upgrade 2>&1 | grep Inst)" ] && apt-get --simulate dist-upgrade | mail -s "[APT] Upgrade needed $HOSTNAME" "{{ admin_mail | quote }}" || exit 0'
+    shell: '[ ! -z "$(apt-get update 2>&1 | grep Get)" ] && [ ! -z "$(apt-get --simulate dist-upgrade 2>&1 | grep Inst)" ] && apt-get --simulate dist-upgrade | mail -s "[ANSIBLE] Upgrade required on {{ ansible_fqdn }}" "{{ admin_mail }}" || exit 0'
     when: mail_info == 'yes' and ansible_pkg_mgr == 'apt'
