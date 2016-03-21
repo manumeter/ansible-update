@@ -23,15 +23,15 @@
     when: ansible_pkg_mgr == 'apt'
 
   - name: yum summary
-    mail: to='{{ admin_mail }}' subject='[ANSIBLE] Upgraded {{ ansible_fqdn }}' body={{ data_yum.results | join(" ") | quote }}
+    shell: 'echo {{ data_yum.results | join(" ") | quote }} | mail -s "[ANSIBLE] Upgraded {{ ansible_fqdn }}" "{{ admin_mail }}"'
     when: mail_info == 'yes' and ansible_pkg_mgr == 'yum' and data_yum.changed
 
   - name: apt summary
-    mail: to='{{ admin_mail }}' subject='[ANSIBLE] Upgraded {{ ansible_fqdn }}' body={{ data_apt.stdout | quote }}
+    shell: 'echo {{ data_apt.stdout | quote }} | mail -s "[ANSIBLE] Upgraded {{ ansible_fqdn }}" "{{ admin_mail }}"'
     when: mail_info == 'yes' and ansible_pkg_mgr == 'apt' and data_apt.changed
 
   - name: reboot mail
-    mail: to='{{ admin_mail }}' subject='[ANSIBLE] Reboot required on {{ ansible_fqdn }}!'
+    shell: 'echo "Reboot required on {{ ansible_fqdn }}" | mail -s "[ANSIBLE] Reboot required on {{ ansible_fqdn }}" "{{ admin_mail }}"'
     when: auto_reboot == 'no' and ( ansible_pkg_mgr == 'yum' and reboot_yum.stdout == 'yes' or ansible_pkg_mgr == 'apt' and reboot_apt.stdout == 'yes' )
 
   - name: auto-reboot
